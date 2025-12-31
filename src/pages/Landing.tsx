@@ -2,12 +2,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MessageSquare, Mic, Zap, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-
 export default function Landing() {
-  const { user } = useAuth();
-
-  return (
-    <div className="min-h-screen bg-background">
+  const {
+    user
+  } = useAuth();
+  return <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -15,20 +14,16 @@ export default function Landing() {
             VoiceWidget
           </Link>
           <div className="flex items-center gap-4">
-            {user ? (
-              <Link to="/dashboard">
+            {user ? <Link to="/dashboard">
                 <Button>Dashboard</Button>
-              </Link>
-            ) : (
-              <>
+              </Link> : <>
                 <Link to="/auth">
                   <Button variant="ghost">Sign In</Button>
                 </Link>
                 <Link to="/auth">
                   <Button>Get Started</Button>
                 </Link>
-              </>
-            )}
+              </>}
           </div>
         </div>
       </nav>
@@ -129,7 +124,7 @@ export default function Landing() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3">
                   <Check className="w-5 h-5 text-primary" />
-                  <span>1 widget</span>
+                  <span>5 widgets</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Check className="w-5 h-5 text-primary" />
@@ -158,7 +153,7 @@ export default function Landing() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Pro</h3>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold">$29</span>
+                <span className="text-4xl font-bold">$19</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
               <ul className="space-y-3 mb-8">
@@ -199,6 +194,5 @@ export default function Landing() {
           © {new Date().getFullYear()} VoiceWidget. Powered by Retell AI.
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 }
