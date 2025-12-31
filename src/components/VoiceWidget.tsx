@@ -24,9 +24,8 @@ const VoiceWidget = ({ className }: VoiceWidgetProps) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [chatCallState, setChatCallState] = useState<"idle" | "active">("idle");
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const retellClient = useRef<RetellWebClient | null>(null);
-  const textRetellClient = useRef<RetellWebClient | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -70,63 +69,6 @@ const VoiceWidget = ({ className }: VoiceWidgetProps) => {
     };
   }, [toast]);
 
-  // Text chat client setup
-  useEffect(() => {
-    textRetellClient.current = new RetellWebClient();
-
-    const client = textRetellClient.current;
-
-    client.on("call_started", () => {
-      console.log("Text chat call started");
-      setChatCallState("active");
-    });
-
-    client.on("call_ended", () => {
-      console.log("Text chat call ended");
-      setChatCallState("idle");
-    });
-
-    client.on("agent_start_talking", () => {
-      // For text mode, we'll capture the transcript
-    });
-
-    client.on("update", (update) => {
-      // Handle transcript updates from the agent
-      if (update.transcript) {
-        const agentMessages = update.transcript
-          .filter((t: { role: string }) => t.role === "agent")
-          .map((t: { content: string }) => t.content);
-        
-        if (agentMessages.length > 0) {
-          const latestAgentMessage = agentMessages[agentMessages.length - 1];
-          setChatMessages((prev) => {
-            const lastMsg = prev[prev.length - 1];
-            if (lastMsg?.role === "agent" && lastMsg.text !== latestAgentMessage) {
-              return [...prev.slice(0, -1), { role: "agent", text: latestAgentMessage }];
-            } else if (lastMsg?.role !== "agent") {
-              return [...prev, { role: "agent", text: latestAgentMessage }];
-            }
-            return prev;
-          });
-        }
-      }
-    });
-
-    client.on("error", (error) => {
-      console.error("Retell text chat error:", error);
-      toast({
-        title: "Chat Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-      setIsSending(false);
-    });
-
-    return () => {
-      client.stopCall();
-    };
-  }, [toast]);
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
@@ -160,14 +102,14 @@ const VoiceWidget = ({ className }: VoiceWidgetProps) => {
     return data;
   };
 
-  const createTextWebCall = async (message: string) => {
+  const sendTextMessage = async (message: string): Promise<{ response: string; conversation_id?: string }> => {
     const { data, error } = await supabase.functions.invoke("retell-text-chat", {
-      body: { message },
+      body: { message, conversation_id: conversationId },
     });
 
     if (error) {
       console.error("Edge function error:", error);
-      throw new Error("Failed to create text chat");
+      throw new Error("Failed to send message");
     }
 
     if (data.error) {
@@ -213,15 +155,17 @@ const VoiceWidget = ({ className }: VoiceWidgetProps) => {
     setIsSending(true);
 
     try {
-      const { access_token } = await createTextWebCall(userMessage);
+      const data = await sendTextMessage(userMessage);
+      
+      // Update conversation ID for continuity
+      if (data.conversation_id) {
+        setConversationId(data.conversation_id);
+      }
 
-      // Start a new call for this message
-      await textRetellClient.current?.startCall({
-        accessToken: access_token,
-      });
-
-      // The response will come through the update event
-      setIsSending(false);
+      // Add agent response
+      if (data.response) {
+        setChatMessages((prev) => [...prev, { role: "agent", text: data.response }]);
+      }
     } catch (error) {
       console.error("Chat message failed:", error);
       toast({
@@ -229,9 +173,10 @@ const VoiceWidget = ({ className }: VoiceWidgetProps) => {
         description: error instanceof Error ? error.message : "Unable to send message",
         variant: "destructive",
       });
+    } finally {
       setIsSending(false);
     }
-  }, [inputText, isSending, toast]);
+  }, [inputText, isSending, toast, conversationId]);
 
   const getStatusText = () => {
     switch (callState) {
