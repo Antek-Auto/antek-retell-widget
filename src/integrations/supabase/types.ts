@@ -205,6 +205,7 @@ export type Database = {
           name: string
           position: string | null
           primary_color: string | null
+          retell_api_key: string | null
           title: string | null
           updated_at: string
           user_id: string | null
@@ -222,6 +223,7 @@ export type Database = {
           name: string
           position?: string | null
           primary_color?: string | null
+          retell_api_key?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string | null
@@ -239,6 +241,7 @@ export type Database = {
           name?: string
           position?: string | null
           primary_color?: string | null
+          retell_api_key?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string | null
