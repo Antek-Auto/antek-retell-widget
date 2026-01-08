@@ -30,6 +30,7 @@ interface WidgetConfig {
   voice_agent_id: string | null;
   chat_agent_id: string | null;
   allowed_domains: string[] | null;
+  retell_api_key: string | null;
 }
 
 export default function WidgetSettings() {
@@ -50,6 +51,7 @@ export default function WidgetSettings() {
   const [position, setPosition] = useState("bottom-right");
   const [voiceAgentId, setVoiceAgentId] = useState("");
   const [chatAgentId, setChatAgentId] = useState("");
+  const [retellApiKey, setRetellApiKey] = useState("");
   const [allowedDomains, setAllowedDomains] = useState("");
 
   useEffect(() => {
@@ -87,6 +89,7 @@ export default function WidgetSettings() {
     setPosition(data.position || "bottom-right");
     setVoiceAgentId(data.voice_agent_id || "");
     setChatAgentId(data.chat_agent_id || "");
+    setRetellApiKey(data.retell_api_key || "");
     setAllowedDomains((data.allowed_domains || []).join("\n"));
     setLoadingWidget(false);
   };
@@ -108,6 +111,7 @@ export default function WidgetSettings() {
         position,
         voice_agent_id: voiceAgentId || null,
         chat_agent_id: chatAgentId || null,
+        retell_api_key: retellApiKey || null,
         allowed_domains: allowedDomains
           .split("\n")
           .map((d) => d.trim())
@@ -271,12 +275,35 @@ export default function WidgetSettings() {
             </div>
           </section>
 
-          {/* Agent IDs */}
+          {/* Retell Configuration */}
           <section className="glass rounded-xl p-6 space-y-6">
-            <h2 className="text-lg font-semibold">Retell Agent IDs</h2>
+            <h2 className="text-lg font-semibold">Retell AI Configuration</h2>
             <p className="text-sm text-muted-foreground">
-              Connect your Retell AI agents for voice and chat
+              Enter your Retell API key and agent IDs to connect voice and chat
             </p>
+
+            <div className="space-y-2">
+              <Label htmlFor="retellApiKey">Retell API Key</Label>
+              <Input
+                id="retellApiKey"
+                type="password"
+                value={retellApiKey}
+                onChange={(e) => setRetellApiKey(e.target.value)}
+                placeholder="key_xxxxx"
+              />
+              <p className="text-xs text-muted-foreground">
+                Get your API key from{" "}
+                <a
+                  href="https://dashboard.retellai.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Retell Dashboard
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </p>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="voiceAgent">Voice Agent ID</Label>
