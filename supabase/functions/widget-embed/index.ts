@@ -227,11 +227,14 @@ serve(async (req) => {
       .retell-widget-mode-btn.active { background: rgba(255,255,255,0.1); color: white; }
       .retell-widget-mode-btn:hover:not(.active) { background: rgba(255,255,255,0.05); }
       .retell-widget-mode-btn svg { width: 16px; height: 16px; fill: currentColor; }
-      .retell-widget-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 280px; max-height: 320px; }
+      .retell-widget-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 260px; max-height: 300px; }
       .retell-widget-msg { max-width: 85%; padding: 12px; border-radius: 16px; font-size: 14px; line-height: 1.4; animation: retell-fade-in 0.3s; word-wrap: break-word; }
       .retell-widget-msg.user { margin-left: auto; border-bottom-right-radius: 4px; color: white; }
       .retell-widget-msg.agent { margin-right: auto; background: rgba(255,255,255,0.1); color: white; border-bottom-left-radius: 4px; }
-      .retell-widget-chat-content { display: flex; flex-direction: column; height: 380px; }
+      .retell-widget-chat-content { display: flex; flex-direction: column; height: 360px; }
+      .retell-widget-attribution { padding: 8px 16px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); }
+      .retell-widget-attribution a { color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.2s; }
+      .retell-widget-attribution a:hover { color: white; text-decoration: underline; }
       .retell-widget-input-area { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; flex-shrink: 0; }
       .retell-widget-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 10px 16px; font-size: 14px; color: white; outline: none; min-width: 0; }
       .retell-widget-input::placeholder { color: rgba(255,255,255,0.5); }
@@ -333,7 +336,7 @@ serve(async (req) => {
             </button>
           </div>
         </div>
-        <div class="retell-widget-voice-content" style="display: \${currentMode === 'voice' ? 'flex' : 'none'}; flex-direction: column; align-items: center; justify-content: center; min-height: 380px;">
+        <div class="retell-widget-voice-content" style="display: \${currentMode === 'voice' ? 'flex' : 'none'}; flex-direction: column; align-items: center; justify-content: center; min-height: 360px;">
           <button class="retell-widget-call-btn" style="background: \${primaryColor}">
             <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6.91 6c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
           </button>
@@ -347,6 +350,7 @@ serve(async (req) => {
           </div>
         </div>
       </div>
+      \${config.attribution_link ? '<div class="retell-widget-attribution">A product by <a href="' + config.attribution_link + '" target="_blank" rel="noopener noreferrer">Antek Automation</a></div>' : ''}
     \`;
     
     // Create toggle button

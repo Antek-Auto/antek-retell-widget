@@ -81,9 +81,16 @@ export default function Dashboard() {
     setLoadingWidgets(false);
   };
 
+  const canCreateWidget = widgets.length < 100;
+
   const createWidget = async () => {
     if (!newWidgetName.trim()) {
       toast.error("Please enter a widget name");
+      return;
+    }
+
+    if (!canCreateWidget) {
+      toast.error("You've reached the maximum limit of 100 widgets per account.");
       return;
     }
 
@@ -186,13 +193,13 @@ export default function Dashboard() {
           <div>
             <h1 className="text-2xl font-bold">Your Widgets</h1>
             <p className="text-muted-foreground">
-              {widgets.length} widget{widgets.length !== 1 ? "s" : ""} created
+              {widgets.length}/100 widgets used
             </p>
           </div>
 
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button disabled={!canCreateWidget} className="gap-2">
                 <Plus className="w-4 h-4" />
                 New Widget
               </Button>
