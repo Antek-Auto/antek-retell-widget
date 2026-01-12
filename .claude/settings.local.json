@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run setup:supabase:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npm install:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(cd:*)",
+      "Bash(xargs ls:*)",
+      "Bash(git checkout:*)",
+      "Bash(pip3 install:*)",
+      "Bash(/Users/andrewnorman/Library/Python/3.9/bin/git-filter-repo --invert-paths --path .env --path .env.local --path \".env*\")",
+      "Bash(git add:*)"
+    ]
+  }
+}
