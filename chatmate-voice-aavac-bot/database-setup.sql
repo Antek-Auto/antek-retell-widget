@@ -267,8 +267,7 @@ CREATE TABLE public.user_invitations (
     invited_by uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     expires_at timestamp with time zone DEFAULT (now() + '7 days'::interval) NOT NULL,
     accepted_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT user_invitations_email_pending UNIQUE(email) WHERE accepted_at IS NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 -- ============================================================================
@@ -310,6 +309,12 @@ ALTER TABLE ONLY public.widget_configs
 
 ALTER TABLE ONLY public.widget_configs
     ADD CONSTRAINT widget_configs_pkey PRIMARY KEY (id);
+
+-- ============================================================================
+-- PARTIAL UNIQUE INDEXES
+-- ============================================================================
+
+CREATE UNIQUE INDEX user_invitations_email_pending ON public.user_invitations(email) WHERE accepted_at IS NULL;
 
 -- ============================================================================
 -- TRIGGERS
