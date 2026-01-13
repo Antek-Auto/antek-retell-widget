@@ -17,8 +17,6 @@ CREATE EXTENSION IF NOT EXISTS "plpgsql";
 CREATE EXTENSION IF NOT EXISTS "supabase_vault";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
-BEGIN;
-
 -- ============================================================================
 -- CUSTOM TYPES
 -- ============================================================================
@@ -535,8 +533,6 @@ VALUES (
     '#14b8a6'
 )
 ON CONFLICT DO NOTHING;
-
-COMMIT;
 
 -- ============================================================================
 -- SETUP COMPLETE
