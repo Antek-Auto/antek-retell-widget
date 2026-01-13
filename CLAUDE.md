@@ -179,9 +179,55 @@ VITE_RETELL_API_KEY            # Global Retell API key (used by Edge Functions)
 
 Stored in `.env.local` (not committed). For Vercel deployment, set equivalent vars in project settings.
 
-## Edge Function Deployment
+## Edge Functions Details
 
-### Local Development
+### Function Reference
+
+**Location**: `supabase/functions/`
+
+| Function | Purpose | Input | Output |
+|----------|---------|-------|--------|
+| `retell-create-call` | Create voice call session with Retell | `{ voice_agent_id, user_id? }` | `{ call_id, access_token, ws_url, ...}` |
+| `retell-text-chat` | Process text chat messages | `{ chat_agent_id, message, chat_id? }` | `{ response, chat_id }` |
+| `widget-config` | Fetch widget configuration | `{ widget_id }` | Widget config object (agent IDs, branding) |
+| `widget-embed` | Serve embeddable widget code | `{ id, mode? }` | HTML/JS bundle for embedding |
+| `wordpress-plugin` | WordPress integration endpoint | Request from WP plugin | Widget initialization response |
+
+### Function Details
+
+**retell-create-call**:
+- Creates a new call session with Retell AI API
+- Receives `voice_agent_id` from widget configuration
+- Returns connection details including WebSocket URL
+- VoiceWidget uses returned URL to establish WebRTC connection
+- Handles authentication with RETELL_API_KEY
+
+**retell-text-chat**:
+- Accepts user message and chat_agent_id
+- Streams response back to frontend
+- Maintains chat_id for conversation continuity
+- Returns agent's text response for display
+
+**widget-config**:
+- Called by embedded widgets on external sites
+- Returns configuration for specific widget_id
+- Includes: agent IDs, branding colors, attribution text
+- Cached by widget to reduce API calls
+
+**widget-embed**:
+- Serves the JavaScript bundle for embedded widgets
+- Returns self-contained HTML/JS code
+- Includes both VoiceWidget and FloatingVoiceWidget variants
+- Automatically fetches widget-config on load
+
+**wordpress-plugin**:
+- Integration endpoint for WordPress plugins
+- Accepts WP-specific parameters
+- Returns widget initialization code
+
+### Environment & Deployment
+
+**Local Development**:
 ```bash
 # Link to Supabase project
 supabase link --project-ref <YOUR_PROJECT_REF>
@@ -203,11 +249,44 @@ supabase secrets set RETELL_API_KEY=<YOUR_KEY>
 supabase functions get-logs <function-name>
 ```
 
-### Environment
+**Runtime & Deployment**:
 - Edge Functions run on Deno (TypeScript runtime)
 - Deployed to Supabase Edge Functions (serverless)
 - Auto-scale based on demand
 - Regional deployment near Supabase database
+- Access RETELL_API_KEY via `Deno.env.get("RETELL_API_KEY")`
+
+## Key Files Reference
+
+### Quick Lookup
+
+| File | Purpose | Modify When |
+|------|---------|-------------|
+| `src/App.tsx` | Router and global providers | Adding routes, changing auth logic |
+| `src/contexts/AuthContext.tsx` | Global auth state | Changing auth flow, adding profile data |
+| `src/lib/auth.ts` | Role/permission utilities | Adding roles, changing permission rules |
+| `src/components/VoiceWidget.tsx` | Core voice/chat widget | Changing widget UI/behavior |
+| `src/pages/Dashboard.tsx` | Widget management page | Changing dashboard layout |
+| `src/pages/AdminPanel.tsx` | Admin user management | Changing invitation system |
+| `src/integrations/supabase/client.ts` | Supabase client | Never modify (auto-generated) |
+| `vite.config.ts` | Build configuration | Changing dev server, plugins, aliases |
+| `tailwind.config.ts` | Styling theme | Changing colors, fonts, animations |
+| `tsconfig.app.json` | TypeScript settings | Changing strict mode, adding paths |
+| `supabase/migrations/` | Database schema | Adding/changing tables, relationships |
+| `supabase/functions/retell-*.ts` | Retell integration | Changing API integration |
+
+### Critical Dependencies
+
+**Most Modified Files**:
+- `src/contexts/AuthContext.tsx` - Core auth state
+- `src/components/VoiceWidget.tsx` - Core widget functionality
+- `src/pages/Dashboard.tsx` - Main user interface
+- `supabase/functions/retell-*.ts` - API integrations
+- `tailwind.config.ts` - Styling and branding
+
+**Do Not Modify**:
+- `src/integrations/supabase/types.ts` - Auto-generated from Supabase schema
+- `src/integrations/supabase/client.ts` - Auto-generated from Supabase CLI
 
 ## Linting & Code Style
 
@@ -238,6 +317,69 @@ Configured in `vite.config.ts` and `tsconfig.app.json`.
 - `lucide-react` - Icon library
 - `next-themes` - Theme switching
 - `sonner` - Toast notifications
+- `recharts` - Data visualization (for analytics dashboards)
+- `qrcode.react` - QR code generation (for widget embedding)
+- `embla-carousel` - Carousel component
+- `date-fns` - Date utilities
+- `class-variance-authority` - Component variant styling
+
+## Data Flow & Architecture Overview
+
+### User Authentication Flow
+1. **User visits `/auth`** → Login form page
+2. **User enters email + password** → `AuthContext.signIn()` called
+3. **Supabase Auth validates** → Session created, stored in localStorage
+4. **AuthContext listens to auth state** → Fetches profile and roles from database
+5. **`useAuth()` hook returns state** → Components render with user context
+6. **Session auto-refreshes** → Tokens refreshed automatically by Supabase
+7. **Sign out** → Session cleared, user redirected to `/auth`
+
+### Invitation Accept Flow
+1. **Admin sends email invitation** → Contains link like `/invite/abc123token`
+2. **User clicks invite link** → `InviteAccept.tsx` loads with token
+3. **User sets password** → Validated against strength requirements (8+ chars, uppercase, lowercase, number, special char)
+4. **Component calls Supabase** → `signUp()` with email, password, and invite token
+5. **Backend creates account** → User profile auto-created, role assigned from invitation
+6. **Auto-join main team** → User added to main team automatically
+7. **Auth state updates** → User can now login normally
+
+### Voice Call Flow
+1. **User opens widget** → `VoiceWidget.tsx` renders with voice mode enabled
+2. **User clicks "Start Call"** → Microphone permission requested
+3. **Component invokes Edge Function** → `supabase.functions.invoke("retell-create-call")`
+4. **Edge Function creates Retell session** → Calls Retell API with widget's `voice_agent_id`
+5. **Session returned to component** → Contains `call_id` and connection details
+6. **RetellWebClient initializes** → Connects WebRTC microphone to Retell servers
+7. **Real-time voice processing** → User speaks, agent responds via speakers
+8. **Call ends** → Session closed, UI returns to idle state
+
+### Chat Flow
+1. **User opens widget** → `VoiceWidget.tsx` renders with chat mode enabled
+2. **User types message** → Component validates input (not empty)
+3. **Message sent to Edge Function** → `supabase.functions.invoke("retell-text-chat")`
+4. **Edge Function processes** → Sends to Retell API with widget's `chat_agent_id`
+5. **Retell returns response** → Streamed back to frontend
+6. **Message displayed** → Added to chat history in component state
+7. **Auto-scroll** → Chat scrolls to latest message
+8. **Session persists** → `chat_id` stored for conversation continuity
+
+### Widget Embedding Flow
+1. **User goes to `/embed`** → Shows embed code with their widget ID
+2. **User copies embed code** → iFrame code with reference to widget
+3. **Embed code placed on external site** → Points to `https://yourdomain.com/widget-embed?id=WIDGET_ID`
+4. **Browser loads embed code** → Makes request to `widget-embed` Edge Function
+5. **Edge Function serves widget** → Returns self-contained JavaScript bundle
+6. **Widget appears on external site** → Fully functional inline or floating widget
+7. **Widget calls `/widget-config`** → Fetches configuration (agent IDs, branding)
+8. **Widget makes voice/chat calls** → Uses same Edge Functions as main app
+
+### Key Dependencies Between Files
+- **App.tsx** → Imports all route pages and AuthProvider
+- **AuthContext.tsx** → Used by all authenticated pages via `useAuth()` hook
+- **VoiceWidget.tsx** → Used by Index, Dashboard, and embedded widgets
+- **FloatingVoiceWidget.tsx** → Wrapper around VoiceWidget for floating variant
+- **Edge Functions** → Called by VoiceWidget and components for Retell integration
+- **Supabase client** → Used by AuthContext and all database queries
 
 ## Development Patterns & Best Practices
 
@@ -335,28 +477,58 @@ See [README.md Development Setup](../README.md#development-setup) for more detai
 - TypeScript strict mode is disabled, but ESLint may still flag issues
 - Run `npm run lint` to see all issues
 - Most errors are in unused variables; they're allowed by config
+- Check `tsconfig.app.json` if strict mode was enabled
 
 **Supabase Edge Functions not deploying:**
 - Ensure `supabase` CLI is installed globally: `npm install -g supabase`
 - Check that you're linked to correct project: `supabase projects list`
 - Verify `RETELL_API_KEY` secret is set: `supabase secrets list`
+- Check function logs for errors: `supabase functions get-logs <function-name>`
+- Ensure all dependencies in Edge Functions are available in Deno ecosystem
 
 **Widget not loading on embedded page:**
 - Verify the embed code uses correct widget ID (check widget URL in dashboard)
 - Check browser console for CORS errors
 - Ensure Supabase project allows the embedding domain in RLS policies
 - Widget loads via iframe from `/widget-embed` endpoint
+- Check that `widget_configs` table has entry for the widget ID
+- Verify `VITE_SUPABASE_PROJECT_ID` is set in environment
 
 **Auth token expired or user logged out unexpectedly:**
 - Check `.env.local` has correct `VITE_SUPABASE_PUBLISHABLE_KEY`
 - Supabase tokens refresh automatically via localStorage
 - Clear browser storage if stuck: `localStorage.clear()`; re-login
+- Check token expiry: Open DevTools → Application → Local Storage → `sb-*-auth-token`
+- Verify Supabase project hasn't run out of API quota
 
 **Voice calls not working:**
 - Verify widget has valid `voice_agent_id` in Retell dashboard
 - Check browser microphone permissions (granted for localhost by default)
 - Ensure `RETELL_API_KEY` is set in Supabase secrets (not in `.env.local`)
 - View Retell logs in Retell dashboard for detailed call errors
+- Check browser console for WebSocket connection errors
+- Verify microphone is not already in use by another app
+- Test with different browsers to isolate browser-specific issues
+
+**Chat not responding:**
+- Verify `chat_agent_id` is set for the widget in widget_configs table
+- Check that Retell API key has permissions for chat endpoints
+- Monitor Edge Function logs: `supabase functions get-logs retell-text-chat`
+- Verify chat_id is being generated and persisted
+- Check that agent is configured for chat mode in Retell dashboard
+
+**Invitation emails not sending:**
+- Verify Supabase email provider is configured in dashboard
+- Check spam/junk folders for emails
+- Review email logs in Supabase authentication dashboard
+- Ensure invitations haven't expired (7-day limit)
+- Test with admin super admin account from `/admin/panel`
+
+**Custom domain or SSL certificate issues:**
+- If using custom domain, ensure DNS is properly pointed to Vercel
+- SSL certificate should auto-renew via Vercel (takes ~48 hours)
+- Check Vercel dashboard for domain configuration status
+- Verify environment variables are set for the custom domain
 
 ### Database Migrations & Schema Changes
 
@@ -377,6 +549,67 @@ See [README.md Development Setup](../README.md#development-setup) for more detai
 **Backend secrets** (Edge Functions, NOT in `.env.local`):
 - `RETELL_API_KEY`: Set via `supabase secrets set RETELL_API_KEY=<key>`
 - Accessible in Edge Functions as `Deno.env.get("RETELL_API_KEY")`
+
+### Code Examples
+
+**Check if user is super admin**:
+```typescript
+import { useAuth } from "@/contexts/AuthContext";
+
+export function AdminFeature() {
+  const { isSuperAdmin } = useAuth();
+  if (!isSuperAdmin) return <Navigate to="/dashboard" />;
+  return <AdminPanel />;
+}
+```
+
+**Fetch widget configuration**:
+```typescript
+import { supabase } from "@/integrations/supabase/client";
+
+const { data: widgetConfig } = await supabase
+  .from("widget_configs")
+  .select("*")
+  .eq("id", widgetId)
+  .single();
+```
+
+**Create a voice call**:
+```typescript
+const { data, error } = await supabase.functions.invoke("retell-create-call", {
+  body: {
+    voice_agent_id: "your-agent-id",
+    user_id: userId,
+  }
+});
+
+const { call_id, access_token, ws_url } = data;
+```
+
+**Show toast notification**:
+```typescript
+import { toast } from "sonner";
+
+toast.success("Widget created successfully!");
+toast.error("Failed to create widget");
+toast.loading("Creating widget...");
+```
+
+**Form validation with React Hook Form**:
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const schema = z.object({
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Minimum 8 characters"),
+});
+
+const { register, handleSubmit, formState: { errors } } = useForm({
+  resolver: zodResolver(schema),
+});
+```
 
 ### Hot Module Replacement (HMR)
 
