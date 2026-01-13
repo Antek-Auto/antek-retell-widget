@@ -90,7 +90,7 @@ This may take 1-2 minutes. When done, you should see 5 Edge Functions listed:
 - `retell-text-chat`
 - `widget-config`
 - `widget-embed`
-- `wordpress-plugin`
+
 
 ## Step 6: Set Edge Function Secret
 
