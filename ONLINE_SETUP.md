@@ -1,14 +1,21 @@
-# Online Setup Guide - No Local Development Required
+# Online Setup Guide
 
-**Deploy Antek Retell Widget in 10 minutes using only web browsers. No CLI, no local development, no npm required.**
+**Deploy Antek Retell Widget in 10-15 minutes with minimal local setup.**
+
+- **Paid Supabase Plan**: 100% browser-based, no CLI required
+- **Free Supabase Tier**: Requires Supabase CLI for Edge Functions deployment
 
 ## Prerequisites
 
 Before you start, make sure you have accounts for:
 - ✅ **GitHub** - for forking the repository
-- ✅ **Supabase** (free tier available) - for the database and backend
+- ✅ **Supabase** - for the database and backend
+  - Free tier works, but requires Supabase CLI for Edge Functions
+  - Pro plan ($25/mo) enables GitHub integration (easier setup)
 - ✅ **Retell AI** with API key - for voice/chat agents
 - ✅ **Vercel** - for hosting the frontend
+
+**Note**: If using Supabase free tier, you'll need to install the Supabase CLI (covered in Step 5)
 
 ## Step 1: Fork the GitHub Repository
 
@@ -77,7 +84,11 @@ Once the project is created:
 
 ✅ Your super admin user is now set up!
 
-## Step 5: Connect GitHub to Supabase (Edge Functions)
+## Step 5: Deploy Edge Functions
+
+⚠️ **IMPORTANT**: GitHub integration for Edge Functions requires a **paid Supabase plan** (Pro or higher). Choose the method that matches your plan:
+
+### Option A: For Paid Plans - GitHub Integration (Easiest)
 
 1. In Supabase, go to **Edge Functions** (left sidebar)
 2. Click **Connect to GitHub**
@@ -90,7 +101,69 @@ This may take 1-2 minutes. When done, you should see 5 Edge Functions listed:
 - `retell-text-chat`
 - `widget-config`
 - `widget-embed`
+- `wordpress-plugin`
 
+✅ **Skip to Step 6**
+
+### Option B: For Free Tier - Supabase CLI (Requires Local Setup)
+
+If you're on the free tier, you'll need to deploy Edge Functions using the Supabase CLI:
+
+#### B1. Install Supabase CLI
+
+**macOS/Linux:**
+```bash
+brew install supabase/tap/supabase
+```
+
+**Windows:**
+```powershell
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
+```
+
+Or download from: https://github.com/supabase/cli/releases
+
+#### B2. Login to Supabase
+
+```bash
+supabase login
+```
+
+This will open your browser. Authorize the CLI.
+
+#### B3. Clone Your Fork Locally
+
+```bash
+git clone https://github.com/your-username/antek-retell-widget.git
+cd antek-retell-widget/chatmate-voice-aavac-bot
+```
+
+#### B4. Link to Your Project
+
+```bash
+supabase link --project-ref YOUR_PROJECT_ID
+```
+
+Replace `YOUR_PROJECT_ID` with your Supabase Project ID (from Step 2).
+
+#### B5. Deploy Edge Functions
+
+```bash
+cd supabase/functions
+supabase functions deploy retell-create-call
+supabase functions deploy retell-text-chat
+supabase functions deploy widget-config
+supabase functions deploy widget-embed
+supabase functions deploy wordpress-plugin
+```
+
+Or deploy all at once:
+```bash
+supabase functions deploy
+```
+
+✅ **Continue to Step 6**
 
 ## Step 6: Set Edge Function Secret
 
@@ -198,8 +271,10 @@ Your Antek Retell Widget is now live and ready to use!
 - If rerunning, disable the trigger first: `DROP TRIGGER IF EXISTS enforce_widget_limit ON widget_configs;`
 
 **Edge Functions not deploying**
-- Go to Supabase → Edge Functions and check the deployment status
-- If stuck, try disconnecting and reconnecting GitHub
+- **Free Tier**: GitHub integration won't work. Use Supabase CLI (see Step 5, Option B)
+- **Paid Plan**: Go to Supabase → Edge Functions and check the deployment status
+- If GitHub integration is stuck, try disconnecting and reconnecting
+- Verify you're on a paid plan if using GitHub integration
 
 ### Next Steps
 
