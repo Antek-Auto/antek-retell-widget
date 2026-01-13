@@ -1,67 +1,37 @@
-# Deployment Guide - Retell Voice Agent Widget (Self-Hosted Package)
+# Deployment Guide - Retell Voice Agent Widget
 
-This guide provides step-by-step instructions for deploying the Retell Voice Agent Widget as a self-hosted, white-label application.
+## ⭐ Start Here: Online Deployment Guide
 
-## Prerequisites
+**[→ Go to ONLINE_SETUP.md for complete step-by-step deployment instructions](./ONLINE_SETUP.md)**
 
-Before starting, ensure you have:
-- **Node.js** 16+ and npm installed
-- **Supabase CLI** installed: `npm install -g supabase`
-- **GitHub account** (for Vercel deployment)
-- **Vercel account** (for production hosting)
-- **Retell AI account** with API key (https://retell.ai/dashboard)
-- A **Supabase project** (free tier is fine to start)
+The ONLINE_SETUP.md guide covers:
+- Creating a Supabase project entirely online
+- Deploying database schema via copy-paste SQL
+- Creating admin users
+- Connecting GitHub to Supabase for Edge Functions
+- Deploying to Vercel with environment variables
+- Getting your app live in ~10 minutes
 
-## Quick Start (Local Development)
+**No local CLI tools, no npm, no local development required.**
 
-### Step 1: Clone and Install
+---
 
-```bash
-git clone <your-repo-url> retell-widget
-cd retell-widget/chatmate-voice-aavac-bot
-npm install
-```
+## Advanced Deployment Options
 
-### Step 2: Run Automated Setup
+This section covers advanced deployment scenarios, customizations, and troubleshooting.
 
-From the `chatmate-voice-aavac-bot/` directory:
+### Prerequisites (Optional - Only if Developing Locally)
 
-```bash
-npm run setup
-```
+If you want to develop locally before deploying:
+- **Node.js** 16+ and npm
+- **Supabase CLI**: `npm install -g supabase`
+- **Git**
 
-Follow the interactive prompts to provide:
-1. **Supabase credentials** (Project URL, Anon Key, Service Role Key)
-2. **Retell API Key** (from https://retell.ai/dashboard)
-3. **Super admin credentials** (email and strong password)
-4. **Database migrations** (guided steps via Supabase CLI)
-5. **Edge function deployment** (guided steps)
-
-### Step 3: Start Development Server
-
-```bash
-npm run dev
-```
-
-Visit: `http://localhost:8080/auth`
-
-Sign in with your super admin credentials created during setup.
-
-### Step 4: Invite Team Members
-
-1. Navigate to `/admin/panel`
-2. Scroll to "User Management" section
-3. Enter team member's email and select their role
-4. Click "Send Invitation"
-5. Share the generated invitation link with the team member
-6. They can accept by visiting the link, setting their password, and signing in
-
-## Production Deployment to Vercel
-
-### Prerequisites
-- Code pushed to GitHub
-- All local setup completed and tested
-- `.env.local` generated (from setup script)
+For production deployment to Vercel, you only need:
+- **GitHub account**
+- **Vercel account**
+- **Supabase account**
+- **Retell AI API key**
 
 ### Step 1: Create Vercel Project
 

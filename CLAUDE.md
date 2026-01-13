@@ -4,46 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a self-hosted, white-label Retell Voice Agent Widget application—a React-based SPA that provides voice and chat capabilities powered by the Retell AI SDK. Designed as a deployable package for third parties, the app uses an admin-controlled, invitation-only user model (no public signup). Features include authentication with email-based invitations, dashboard management, widget configuration, and embeddable voice/chat widget components. The main codebase is in `chatmate-voice-aavac-bot/`.
+This is a self-hosted, white-label Retell Voice Agent Widget application—a React-based SPA that provides voice and chat capabilities powered by the Retell AI SDK. Designed as a deployable package for third parties, the app uses an admin-controlled, invitation-only user model (no public signup). Features include authentication with email-based invitations, dashboard management, widget configuration, and embeddable voice/chat widget components.
+
+**Directory structure**: The main codebase is in `chatmate-voice-aavac-bot/`. The root directory contains deployment configs, documentation, and setup scripts. All commands and paths in this guide refer to the `chatmate-voice-aavac-bot/` directory unless otherwise noted.
 
 ## Tech Stack
 
-- **Build Tool**: Vite (dev server on port 8080)
-- **Runtime**: React 18.3 with TypeScript
+- **Build Tool**: Vite (dev server on port 8080, HMR with SWC compiler)
+- **Runtime**: React 18.3 with TypeScript (strict mode disabled for flexibility)
 - **UI Components**: shadcn-ui (Radix UI primitives + Tailwind)
 - **Styling**: Tailwind CSS with custom theme variables (Space Grotesk and JetBrains Mono fonts)
 - **State Management**: React Context (AuthContext) + TanStack Query for async state
-- **Voice/Chat SDK**: Retell Client JS SDK (2.0.7)
+- **Voice/Chat SDK**: Retell Client JS SDK (2.0.7, uses WebRTC for voice)
 - **Backend**: Supabase (PostgreSQL + Auth + Edge Functions)
 - **Forms**: React Hook Form with Zod validation
 - **Deployment**: Vercel (frontend) + Supabase Edge Functions (backend)
+- **Additional**: Lovable tagger plugin in dev (marks components for design system)
 
 ## Commands
 
 Run these from `chatmate-voice-aavac-bot/` directory:
 
 ```bash
-# Install dependencies
-npm install
+# Development (optional - for customizing code locally)
+npm install           # Install dependencies
+npm run dev          # Dev server (http://localhost:8080 with HMR)
+npm run build        # Production build (minified, optimized)
+npm run build:dev    # Dev build (unminified, source maps)
+npm run preview      # Preview production build locally
+npm run lint         # Check code quality with ESLint
 
-# Development server (runs on http://localhost:8080)
-npm run dev
-
-# Production build
-npm run build
-
-# Development build
-npm run build:dev
-
-# Preview production build locally
-npm run preview
-
-# Lint code (ESLint)
-npm run lint
-
-# Setup self-hosted package (initial setup only)
-npm run setup
+# DEPRECATED - Use ONLINE_SETUP.md instead:
+# npm run setup          # Setup script (no longer recommended)
+# npm run setup:supabase # Supabase setup script (no longer recommended)
 ```
+
+**For Production Deployment**: Skip the npm commands and follow [ONLINE_SETUP.md](../ONLINE_SETUP.md) instead.
+
+**Testing**: Currently no test runner is configured. Use `npm run lint` for code quality checks.
 
 ## Project Structure
 
@@ -147,7 +145,7 @@ Key tables in `supabase/migrations/`:
 ## Styling & Theme
 
 ### Tailwind Configuration
-- Dark mode enabled (class-based, not system preference)
+- Dark mode enabled (class-based, not system preference; theme toggle in UI)
 - Custom CSS variables for colors: `--border`, `--primary`, `--glow-primary`, `--accent`, `--destructive`, etc.
 - Custom animations: `accordion-down`, `accordion-up`, `fade-in`, `scale-in`
 - Container queries for responsive design
@@ -156,6 +154,12 @@ Key tables in `supabase/migrations/`:
 ### Font Stack
 - Sans: Space Grotesk (headings and body)
 - Mono: JetBrains Mono (code snippets, technical text)
+
+### Theme System
+- Uses `next-themes` for persistent theme switching (stored in localStorage)
+- Theme toggle accessible from `/settings` page
+- Themes are class-based (affects root element's `class` attribute)
+- Customize theme colors via Tailwind variables in `tailwind.config.ts`
 
 ## Supabase Integration
 
@@ -235,53 +239,156 @@ Configured in `vite.config.ts` and `tsconfig.app.json`.
 - `next-themes` - Theme switching
 - `sonner` - Toast notifications
 
-## Development Notes
+## Development Patterns & Best Practices
 
-- Lovable tagger plugin active in development (marks components for design tool)
-- SWC compiler for fast HMR
+### Component Architecture
+- **Page Components** (`src/pages/`): Route-level components that handle auth checks and page layout
+- **UI Components** (`src/components/ui/`): Generated shadcn-ui primitives (auto-generated from CLI)
+- **Feature Components** (`src/components/`): Domain-specific components (e.g., VoiceWidget, FloatingVoiceWidget)
+- **Prefer existing components**: Check if a shadcn component exists before creating new ones
+- **Use slots pattern** from Radix UI for flexible composition (Button, Dialog, etc. support `asChild` prop)
+
+### State Management Patterns
+- **Auth State**: Use `useAuth()` hook from AuthContext in any component
+- **Server State**: Use TanStack Query for API calls and caching (with `@tanstack/react-query`)
+- **Local State**: React `useState` for UI-only state
+- **Don't mix patterns**: Avoid directly calling Supabase client in components; use hooks or queries
+
+### Form Handling
+- **Forms use React Hook Form + Zod**: Define schema in Zod, use `useForm` hook with resolver
+- **Validation**: Both client-side (Zod schema) and server-side (Supabase RLS policies)
+- **Example**: See `InviteAccept.tsx` for password strength validation with custom component
+
+### Development Notes
+- Lovable tagger plugin active in development (marks components for design tool; remove in production if needed)
+- SWC compiler for fast HMR (enabled in `vite.config.ts`)
 - Original project built via Lovable (design-to-code platform)
-- Generated UI components use shadcn-ui; prefer existing primitives over new custom components
-- When modifying UI, check if a shadcn component already exists before creating new ones
-- TypeScript strict mode disabled in `tsconfig.app.json` (allows flexibility for rapid development)
+- TypeScript strict mode disabled in `tsconfig.app.json` (allows flexibility; enable if upgrading)
+- No test framework configured; use `npm run lint` for code quality
 
-## Setup & Initialization (Self-Hosted Package)
+### Common Pitfalls
+- **Don't add state to Auth context**: It's for auth + profile only; use React Query for other server state
+- **Don't call Supabase directly in render**: Wrap in useEffect or custom hook to avoid race conditions
+- **Don't commit `.env.local`**: It's in `.gitignore` and contains secrets
+- **Role-based access**: Check roles in component conditionally or use RLS policies for data access
+- **Widget embedding**: Widgets are served via iframe at `/embed` route; ensure CORS is configured
 
-The setup process is automated via `scripts/setup-package.js` for end users deploying this package:
+## Setup & Initialization
 
-1. **Create Supabase project** at https://supabase.com
-2. **Get credentials** from Supabase:
-   - Project URL: `https://xxxxx.supabase.co`
-   - Anon/Public Key: Starts with `eyJ...`
-   - Service Role Key: Starts with `eyJ...`
-3. **Get Retell API key** from https://retell.ai/dashboard
-4. **Run automated setup** (from `chatmate-voice-aavac-bot/` directory):
+### ⭐ Production Deployment (Recommended)
+
+**[→ Follow ONLINE_SETUP.md in the root directory](../ONLINE_SETUP.md)**
+
+This covers everything needed for production deployment without local setup:
+- Creating Supabase project online
+- Running database migrations via SQL Editor (copy-paste)
+- Creating admin users via Supabase Auth
+- Deploying Edge Functions via GitHub integration
+- Deploying to Vercel with environment variables
+
+Takes ~10 minutes, no CLI tools required.
+
+### Local Development (Optional)
+
+If you want to develop locally:
+
+1. **Clone and install**:
    ```bash
+   git clone <your-repo> && cd chatmate-voice-aavac-bot
    npm install
+   ```
+
+2. **Create Supabase project** at https://supabase.com
+
+3. **Get credentials**:
+   - Project URL: `https://xxxxx.supabase.co`
+   - Anon Key: Starts with `eyJ...`
+   - Service Role Key: Starts with `eyJ...`
+
+4. **Run setup script** (creates `.env.local`):
+   ```bash
    npm run setup
    ```
-   This script will:
-   - Validate all credentials
-   - Guide through database migrations via Supabase CLI
-   - Deploy edge functions and set secrets
-   - Create super admin user with strong password
-   - Generate `.env.local` with all required variables
-   - Output next steps with login URL
+   Follow prompts and you'll have a local database configured
 
-5. **Start development**: `npm run dev` and visit `http://localhost:8080/auth`
-6. **Sign in** with super admin credentials created during setup
-7. **Invite users** from `/admin/panel` by providing their email and role
-8. **Users accept invitations** by visiting email link, setting password, and signing in
+5. **Start dev server**:
+   ```bash
+   npm run dev
+   ```
 
-### Production Deployment to Vercel
+6. **Access at** `http://localhost:8080/auth`
 
-For deploying to Vercel:
-1. Push code to GitHub
-2. Create Vercel project connected to repo
-3. Set environment variables in Vercel project settings:
-   - `VITE_SUPABASE_URL` (from setup script output)
-   - `VITE_SUPABASE_PUBLISHABLE_KEY` (anon key from Supabase)
-   - `VITE_SUPABASE_PROJECT_ID` (project reference from Supabase URL)
-   - `VITE_RETELL_API_KEY` (from Retell dashboard)
-4. Deploy to Vercel (automatic on git push)
+See [README.md Development Setup](../README.md#development-setup) for more details on local development.
 
-See `DEPLOYMENT.md` for detailed deployment instructions.
+## Development Workflow & Debugging
+
+### Setting Up Local Development
+
+1. **Get credentials**: Prepare Supabase URL, anon key, and Retell API key
+2. **Run setup**: `npm run setup` (interactive, creates `.env.local`)
+3. **Start dev server**: `npm run dev` (runs on `http://localhost:8080`)
+4. **Login**: Visit `/auth` and use super admin credentials created during setup
+
+### Common Issues & Solutions
+
+**Build fails with TypeScript errors:**
+- TypeScript strict mode is disabled, but ESLint may still flag issues
+- Run `npm run lint` to see all issues
+- Most errors are in unused variables; they're allowed by config
+
+**Supabase Edge Functions not deploying:**
+- Ensure `supabase` CLI is installed globally: `npm install -g supabase`
+- Check that you're linked to correct project: `supabase projects list`
+- Verify `RETELL_API_KEY` secret is set: `supabase secrets list`
+
+**Widget not loading on embedded page:**
+- Verify the embed code uses correct widget ID (check widget URL in dashboard)
+- Check browser console for CORS errors
+- Ensure Supabase project allows the embedding domain in RLS policies
+- Widget loads via iframe from `/widget-embed` endpoint
+
+**Auth token expired or user logged out unexpectedly:**
+- Check `.env.local` has correct `VITE_SUPABASE_PUBLISHABLE_KEY`
+- Supabase tokens refresh automatically via localStorage
+- Clear browser storage if stuck: `localStorage.clear()`; re-login
+
+**Voice calls not working:**
+- Verify widget has valid `voice_agent_id` in Retell dashboard
+- Check browser microphone permissions (granted for localhost by default)
+- Ensure `RETELL_API_KEY` is set in Supabase secrets (not in `.env.local`)
+- View Retell logs in Retell dashboard for detailed call errors
+
+### Database Migrations & Schema Changes
+
+- Migrations are in `supabase/migrations/` (auto-timestamped SQL files)
+- New migrations are applied during `npm run setup:supabase`
+- To create a new migration locally: `supabase migration new <name>`
+- Always test migrations locally before deploying to production
+- RLS policies protect all tables; verify policies when adding new tables
+
+### Environment Variables
+
+**Frontend variables** (Vite, prefixed with `VITE_`):
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: Public anon key (safe to expose)
+- `VITE_SUPABASE_PROJECT_ID`: Project reference (used for client init)
+- `VITE_RETELL_API_KEY`: Not used in frontend (for build-time reference only)
+
+**Backend secrets** (Edge Functions, NOT in `.env.local`):
+- `RETELL_API_KEY`: Set via `supabase secrets set RETELL_API_KEY=<key>`
+- Accessible in Edge Functions as `Deno.env.get("RETELL_API_KEY")`
+
+### Hot Module Replacement (HMR)
+
+- Vite HMR is enabled by default during dev
+- Supported: Component hot reload, style updates, state preservation in some cases
+- If HMR breaks: Full page refresh via `npm run dev` console or browser F5
+- For Edge Functions: Changes require manual redeploy (`supabase functions deploy <name>`)
+
+### Production Build Considerations
+
+- `npm run build` creates `dist/` folder with optimized output
+- Environment variables from `.env.local` are embedded at build time
+- Preview build before deploying: `npm run preview`
+- For Vercel: Set `VITE_*` variables in project settings (they're public)
+- Keep `.env.local` only for local development; never commit to git

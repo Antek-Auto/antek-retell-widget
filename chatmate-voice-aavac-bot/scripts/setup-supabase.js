@@ -1,5 +1,20 @@
 #!/usr/bin/env node
 
+/**
+ * ⚠️ DEPRECATED: This script is for local development only.
+ *
+ * For production deployment, use the ONLINE_SETUP.md guide instead:
+ * → https://github.com/Nipstar/antek-retell-widget/blob/main/ONLINE_SETUP.md
+ *
+ * The online setup guide covers:
+ * - Creating Supabase project entirely online
+ * - Database migrations via copy-paste SQL
+ * - Edge Functions deployment via GitHub integration
+ * - Vercel deployment with environment variables
+ *
+ * For local development only, you can continue using this script.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';

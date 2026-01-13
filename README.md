@@ -13,44 +13,35 @@ A white-label, self-hosted voice and chat widget platform powered by Retell AI. 
 - **Self-Hosted** - Deploy to your own Supabase + Vercel infrastructure
 - **Production-Ready** - Built with Vite, React, TypeScript, Tailwind CSS, and shadcn-ui
 
-## Quick Start
+## Deploy in 10 Minutes (No Local Setup Required)
+
+**Start your widget platform instantly using only web browsers. No CLI, no npm, no local development needed.**
 
 ### Prerequisites
-
-- Node.js 16+
-- npm or yarn
+- GitHub account (for forking)
 - Supabase account (free tier available)
 - Retell AI account with API key
-- Vercel account (for production deployment)
+- Vercel account
 
-### Local Development Setup
+### Setup Steps
+1. Fork the GitHub repository
+2. Create a Supabase project
+3. Run SQL setup script (copy-paste)
+4. Create admin user in Supabase Auth
+5. Connect GitHub to Supabase for Edge Functions
+6. Deploy to Vercel with environment variables
+7. Access your live app and start creating widgets!
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/Nipstar/antek-retell-widget.git
-cd antek-retell-widget/chatmate-voice-aavac-bot
+**[→ Start with ONLINE_SETUP.md for detailed step-by-step instructions](./ONLINE_SETUP.md)**
 
-# 2. Install dependencies
-npm install
+---
 
-# 3. Run automated setup (interactive)
-npm run setup
-# Follow the prompts to:
-# - Enter Supabase credentials
-# - Enter Retell API key
-# - Create super admin account
-# - Deploy database migrations
-# - Deploy edge functions
+### Want to Develop Locally?
 
-# 4. Start development server
-npm run dev
-
-# 5. Open browser
-# Visit http://localhost:8080/auth
-# Sign in with your super admin credentials
-```
-
-The `npm run setup` script automates the entire initialization process and will guide you through each step.
+Local development is optional. If you want to customize code or test locally:
+- See [Development Setup](#development-setup) section below
+- Requires Node.js 16+, npm/yarn, and Supabase CLI
+- Use `npm run dev` for dev server and `npm run build` for production builds
 
 ## Project Structure
 
@@ -115,19 +106,16 @@ antek-retell-widget/
 
 ## Deployment
 
-### Local Development
-See Quick Start section above.
+**[→ Follow ONLINE_SETUP.md for complete online deployment instructions](./ONLINE_SETUP.md)**
 
-### Production Deployment
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions on deploying to Vercel.
+This covers:
+- Creating a Supabase project
+- Setting up the database with copy-paste SQL
+- Creating admin users
+- Deploying Edge Functions via GitHub integration
+- Deploying to Vercel with environment variables
 
-**Summary:**
-1. Create Supabase project
-2. Get Retell API key
-3. Push code to GitHub
-4. Create Vercel project connected to repo
-5. Set environment variables in Vercel
-6. Deploy (automatic on git push)
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for advanced deployment options and troubleshooting.
 
 ## Technology Stack
 
@@ -162,28 +150,26 @@ VITE_RETELL_API_KEY=your_retell_api_key
 - At least one number (0-9)
 - At least one special character (!@#$%^&*, etc.)
 
-## Commands
+## Commands (For Local Development)
+
+These commands are only needed if you want to develop locally. They are **not required** for production deployment.
 
 ```bash
 # Development
 npm run dev          # Start dev server (http://localhost:8080)
 npm run build        # Production build
 npm run preview      # Preview production build locally
-
-# Setup & Maintenance
-npm run setup        # Run initial setup (one time)
 npm run lint         # Check code quality
+
+# Note: npm run setup is deprecated. Use ONLINE_SETUP.md instead.
 ```
 
 ## Documentation
 
-- **[README.md](./chatmate-voice-aavac-bot/README.md)** - App-specific documentation with production checklist
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Comprehensive deployment guide (300+ lines)
+- **[ONLINE_SETUP.md](./ONLINE_SETUP.md)** - Complete online deployment guide (START HERE)
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Advanced deployment options and troubleshooting
 - **[CLAUDE.md](./CLAUDE.md)** - Architecture and development guide
-
-## Production Deployment Checklist
-
-Before deploying, verify the items in the [Production Deployment Checklist](./chatmate-voice-aavac-bot/README.md#production-deployment-checklist) in the app README.
+- **[chatmate-voice-aavac-bot/README.md](./chatmate-voice-aavac-bot/README.md)** - App-specific documentation
 
 ## Support & Troubleshooting
 
@@ -290,13 +276,96 @@ Built with:
 
 ## Getting Started
 
-Ready to deploy? Follow these steps:
+### 🚀 Deploy Now (Online-Only)
 
-1. **Clone the repository** (you already did this!)
-2. **Review [DEPLOYMENT.md](./DEPLOYMENT.md)** for detailed setup
-3. **Run `npm run setup`** in the chatmate-voice-aavac-bot directory
-4. **Deploy to Vercel** for production
+1. **[Follow ONLINE_SETUP.md](./ONLINE_SETUP.md)** - Takes ~10 minutes, no local tools required
+2. Fork the repository on GitHub
+3. Create a Supabase project
+4. Run the SQL setup script (copy-paste)
+5. Deploy to Vercel
+6. Start creating widgets!
 
-For questions or issues, check the documentation files or review the troubleshooting guides.
+### 🛠️ Develop Locally (Optional)
 
-**Happy deploying! 🚀**
+If you want to modify the code or test locally, see [Development Setup](#development-setup) section below.
+
+### 📚 Documentation
+
+- **Setup**: [ONLINE_SETUP.md](./ONLINE_SETUP.md)
+- **Troubleshooting**: [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **Architecture**: [CLAUDE.md](./CLAUDE.md)
+
+---
+
+## Development Setup
+
+This section is for developers who want to customize the code or test locally.
+
+### Prerequisites
+- Node.js 16+
+- npm or yarn
+- Supabase CLI: `npm install -g supabase`
+- Git
+
+### Local Development Workflow
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/antek-retell-widget.git
+cd antek-retell-widget/chatmate-voice-aavac-bot
+
+# 2. Install dependencies
+npm install
+
+# 3. Run setup (creates .env.local with your Supabase credentials)
+npm run setup
+# Follow the prompts
+
+# 4. Start dev server
+npm run dev
+# Open http://localhost:8080/auth
+
+# 5. Make changes and test
+# HMR (Hot Module Reload) will refresh automatically
+
+# 6. Build for production
+npm run build
+
+# 7. Preview production build
+npm run preview
+```
+
+### Available npm Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm run build:dev` - Create unminified development build
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint checks
+
+### Database Migrations
+
+When developing locally, migrations are applied via `npm run setup`. For subsequent changes:
+
+```bash
+# Create a new migration
+supabase migration new {migration_name}
+
+# Apply migrations
+supabase db push
+```
+
+### Customizing the App
+
+The main application code is in `src/`:
+- `pages/` - Page components (routes)
+- `components/` - Reusable UI components
+- `contexts/` - React Context (AuthContext)
+- `lib/` - Utilities and helpers
+- `integrations/supabase/` - Supabase client setup
+
+For detailed architecture, see [CLAUDE.md](./CLAUDE.md).
+
+---
+
+**Ready to deploy? [→ Start with ONLINE_SETUP.md](./ONLINE_SETUP.md)**
